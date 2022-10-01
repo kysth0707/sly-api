@@ -19,30 +19,64 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"]
 )
+
+def ReturnError():
+	return {"Status" : False}
+
 def Search(SearchText):
 	Response = requests.get(f"{urls.Search}{SearchText}")
 	
 	# print(f"Status : {Response.status_code}")
 	if Response.status_code != 200:
-		return False
+		return ReturnError()
+
 	FullContent = str(Response.text)
 	# Soup = BeautifulSoup(Response.text, 'html.parser')
 	# Contents = Soup.select("#contents")
 
+	# f = open("result.txt", "w", encoding="utf8")
+	# f.write(str(Response.text))
+	# f.close()
+
+	LastSearchText = 'searchVideoResultEntityKey'
+
 	StartNum = FullContent.find('[{"itemSectionRenderer":{"contents":') + len('[{"itemSectionRenderer":{"contents":')
 	EndNum = 0
-	for i in range(50):
-		if FullContent.find('"searchVideoResultEntityKey":"', EndNum + 50) == -1:
+	LastNum = -1
+	for i in range(80):
+		if FullContent.find(LastSearchText, EndNum + len(LastSearchText)) == -1:
 			# print(f"items : {i}")
 			break
 		else:
-			EndNum = FullContent.find('"searchVideoResultEntityKey":"', EndNum + 50) + 50
-	EndNum = FullContent.find('"}}],', EndNum) + 4
-	Contents = FullContent[StartNum:EndNum]
+			if LastNum == -1:
+				EndNum = FullContent.find(LastSearchText, EndNum + 50) + len(LastSearchText)
+			else:
+				if LastNum - FullContent.find(LastSearchText, EndNum + 50) + len(LastSearchText) < 17000:
+					EndNum = FullContent.find(LastSearchText, EndNum + 50) + len(LastSearchText)
+				else:
+					break
+		LastNum = EndNum
+		# print(i, EndNum, LastNum)
+	
+	EndNum = FullContent.find('"}}', EndNum) + 3
+	Data = FullContent[StartNum:EndNum]
+	if FullContent[EndNum + 1] != "]":
+		Data = Data + "]"
+
+	# print(Data[len(Data) -500:])
+	# print(EndNum)
+	# Contents = FullContent[StartNum:EndNum]
 	# print(Contents)
 	# print(Contents.count("["))
 	# print(Contents.count("]"))
-	Contents = json.loads(FullContent[StartNum:EndNum])
+	try:
+		Contents = json.loads(Data)
+	except Exception as e:
+		print(e)
+
+		# print(FullContent[StartNum:EndNum][283888-500:283888+500])
+
+		return ReturnError()
 
 	Export = []
 	for i in range(len(Contents)):
@@ -92,7 +126,7 @@ def a():
 
 @app.get('/get/{text}/')
 def b(text, request : Request):
-	print(request.client.host)
+	# print(request.client.host)
 	return Search(text)
 
 if __name__ == "__main__":
