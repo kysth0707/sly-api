@@ -28,6 +28,10 @@ Return Value
 - OwnerLink : 영상 게시자 주소 ex)/c/샌즈마크...
 - OwnerPictureLink : 영상 게시자 사진 ex)https://yt3.ggpht.com ...
 
+Fail Value
+- {"Status":false,"Cause":"Json Parse Failed"} : Json 파싱 실패, 코드 내 문제입니다 ( 해결 방안 찾는 중 )
+- {"Status":false,"Cause":"Youtube Request Failed"} 유튜브 연결 실패, 아마 유튜브 문제입니다
+
 중요한 점
 > 유튜브 검색 방식 변경 시, 사용 불가
 - 해당 API 를 Request 기반 이여서 유튜브 검색 방식이 바뀌면 사용이 불가능합니다
