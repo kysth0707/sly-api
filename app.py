@@ -20,15 +20,15 @@ app.add_middleware(
 	allow_headers=["*"]
 )
 
-def ReturnError():
-	return {"Status" : False}
+def ReturnError(Cause):
+	return {"Status" : False, "Cause" : Cause}
 
 def Search(SearchText):
 	Response = requests.get(f"{urls.Search}{SearchText}")
 	
 	# print(f"Status : {Response.status_code}")
 	if Response.status_code != 200:
-		return ReturnError()
+		return ReturnError("Youtube Request Failed")
 
 	FullContent = str(Response.text)
 	# Soup = BeautifulSoup(Response.text, 'html.parser')
@@ -76,7 +76,7 @@ def Search(SearchText):
 
 		# print(FullContent[StartNum:EndNum][283888-500:283888+500])
 
-		return ReturnError()
+		return ReturnError("Json Parse Failed")
 
 	Export = []
 	for i in range(len(Contents)):
