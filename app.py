@@ -20,27 +20,19 @@ app.add_middleware(
 	allow_headers=["*"]
 )
 
-def ReturnError(Cause):
-	return {"Status" : False, "Cause" : Cause}
+def ReturnError(Cause, Json = None, CountA = None, CountB = None):
+	if Json == None:
+		return {"Status" : False, "Cause" : Cause}
+	else:
+		return {"Status" : False, "Cause" : Cause, "Json" : Json, "[ Count" : CountA, "] Count" : CountB}
 
-def Search(SearchText):
-	Response = requests.get(f"{urls.Search}{SearchText}")
-	
-	# print(f"Status : {Response.status_code}")
-	if Response.status_code != 200:
-		return ReturnError("Youtube Request Failed")
-
-	FullContent = str(Response.text)
-	# Soup = BeautifulSoup(Response.text, 'html.parser')
-	# Contents = Soup.select("#contents")
-
-	# f = open("result.txt", "w", encoding="utf8")
-	# f.write(str(Response.text))
-	# f.close()
-
+def SearchWithSlice(FullContent, SearchKeyword, SearchNum):
 	LastSearchText = 'searchVideoResultEntityKey'
 
-	StartNum = FullContent.find('[{"itemSectionRenderer":{"contents":') + len('[{"itemSectionRenderer":{"contents":')
+	StartNum = 0
+	for i in range(SearchNum):
+		if FullContent.find(SearchKeyword, StartNum + 50) != -1:
+			StartNum = FullContent.find(SearchKeyword, StartNum + 50) + len(SearchKeyword)
 	EndNum = 0
 	LastNum = -1
 	for i in range(80):
@@ -63,20 +55,47 @@ def Search(SearchText):
 	if FullContent[EndNum + 1] != "]":
 		Data = Data + "]"
 
+	return Data
+
+
+def Search(SearchText):
+	Response = requests.get(f"{urls.Search}{SearchText}")
+	
+	# print(f"Status : {Response.status_code}")
+	if Response.status_code != 200:
+		return ReturnError("Youtube Request Failed")
+
+	FullContent = str(Response.text)
+	# Soup = BeautifulSoup(Response.text, 'html.parser')
+	# Contents = Soup.select("#contents")
+
+	# f = open("result.txt", "w", encoding="utf8")
+	# f.write(str(Response.text))
+	# f.close()
+
+	# {\"itemSectionRenderer\":{\"contents\":
+
+	
+
 	# print(Data[len(Data) -500:])
 	# print(EndNum)
 	# Contents = FullContent[StartNum:EndNum]
 	# print(Contents)
 	# print(Contents.count("["))
 	# print(Contents.count("]"))
+
+
 	try:
+		Data = SearchWithSlice(FullContent, '{\"itemSectionRenderer\":{\"contents\":', 1)
 		Contents = json.loads(Data)
 	except Exception as e:
-		print(e)
+		# print(e)
+		try:
+			Data = SearchWithSlice(FullContent, '{\"itemSectionRenderer\":{\"contents\":', 10)
+			Contents = json.loads(Data)
 
-		# print(FullContent[StartNum:EndNum][283888-500:283888+500])
-
-		return ReturnError("Json Parse Failed")
+		except Exception as e:
+			return ReturnError("Json Parse Failed", Data, Data.count("["), Data.count("]"))
 
 	Export = []
 	for i in range(len(Contents)):
