@@ -47,5 +47,5 @@ Fail Value
 
 이런 식으로 검색하시고 싶으시면, urls.py 를 변경해주셔야합니다.
 > 단, search_query= 가 반드시 마지막에 올 수 있도록 해주세요
-- [ O ] https://www.youtube.com/results?sp=EgJAAQ%253D%253D&search_query=안녕
-- [ X ] https://www.youtube.com/results?search_query=안녕&sp=EgJAAQ%253D%253D
+- [ O ] https://www.youtube.com/results?sp=EgJAAQ%253D%253D&search_query=
+- [ X ] https://www.youtube.com/results?search_query=&sp=EgJAAQ%253D%253D
