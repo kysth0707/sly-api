@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import uvicorn
-
+from pytube import YouTube
 import requests
 import json
 import urls
+import os
 
 app = FastAPI()
 
@@ -139,6 +141,17 @@ def Search(SearchText):
 
 	return Export
 
+def MP3Download(VideoID):
+	if os.path.isfile(f"./mp3/{VideoID}.mp3"):
+		return FileResponse(f"./mp3/{VideoID}.mp3")
+	try:
+		yt = YouTube(f"https://www.youtube.com/watch?v={VideoID}")
+		yt.streams.filter(only_audio=True).first().download('./mp3',filename=f"{VideoID}.mp3")
+		return FileResponse(f"./mp3/{VideoID}.mp3")
+	except:
+		return False
+	# https://www.youtube.com/watch?v=Wi17ybKXmXE
+
 @app.get('/')
 def a():
 	return "Hello, world!"
@@ -147,6 +160,10 @@ def a():
 def b(text, request : Request):
 	# print(request.client.host)
 	return Search(text)
+
+@app.get('/mp3/{url}')
+def c(url, request : Request):
+	return MP3Download(url)
 
 if __name__ == "__main__":
 	uvicorn.run("app:app", host="0.0.0.0", port=7070, reload=True)
