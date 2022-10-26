@@ -152,6 +152,55 @@ def MP3Download(VideoID):
 		return False
 	# https://www.youtube.com/watch?v=Wi17ybKXmXE
 
+def SearchWithSlice2(FullContent, SearchKeyword):
+	Start = FullContent.find(SearchKeyword) + len(SearchKeyword)
+	a=[]
+	End = 0
+	WaitFlag = False
+	for i in range(Start-1, 10000000):
+		if FullContent[i] == "[":
+			WaitFlag = True
+			a.append(True)
+		elif FullContent[i] == "]":
+			a.pop()
+		if len(a) == 0 and WaitFlag:
+			End = i
+			break
+	return FullContent[Start:End + 1]
+
+def VideoList(url):
+	Response = requests.get(url)
+	FullContent = str(Response.text)
+	
+	# if Response.status_code != 200:
+	# 	return ReturnError("Youtube Request Failed")
+
+	Data = SearchWithSlice2(FullContent, ',"content":{"sectionListRenderer":{"contents":')
+
+	f = open("result.txt", "w", encoding="utf8")
+	f.write(Data)
+	f.close()
+
+	Contents = json.loads(Data)
+	Contents = Contents[0]['itemSectionRenderer']['contents'][0]['gridRenderer']['items']
+	# print(Contents[0]['gridVideoRenderer']['videoId'])
+	# print(Contents[0]['gridVideoRenderer']['thumbnail']['thumbnails'][0]['url'])
+	# print(Contents[0]['gridVideoRenderer']['title']['runs'][0]['text'])
+	# print(Contents[0]['gridVideoRenderer']['publishedTimeText']['simpleText'])
+	# print(Contents[0]['gridVideoRenderer']['shortViewCountText']['accessibility']['accessibilityData']['label'])
+	ReturnValue=[]
+	for i in range(len(Contents)):
+		try:
+			ReturnValue.append({"Title":Contents[i]['gridVideoRenderer']['title']['runs'][0]['text'],
+								"Thumnail":Contents[i]['gridVideoRenderer']['thumbnail']['thumbnails'][0]['url'],
+								"VideoID":Contents[0]['gridVideoRenderer']['videoId'],
+								"Date":Contents[0]['gridVideoRenderer']['publishedTimeText']['simpleText'],
+								"ViewCount":Contents[0]['gridVideoRenderer']['shortViewCountText']['accessibility']['accessibilityData']['label']
+								})
+		except:
+			pass
+	return ReturnValue
+
 @app.get('/')
 def a():
 	return "Hello, world!"
@@ -164,6 +213,10 @@ def b(text, request : Request):
 @app.get('/mp3/{url}')
 def c(url, request : Request):
 	return MP3Download(url)
+
+@app.get('/videos/{url}')
+def d(url, request : Request):
+	return VideoList(f"https://www.youtube.com/user/{url}/videos")
 
 if __name__ == "__main__":
 	uvicorn.run("app:app", host="0.0.0.0", port=7070, reload=True)
