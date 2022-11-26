@@ -178,7 +178,7 @@ def VideoList(url):
 	Data = SearchWithSlice2(FullContent, ',"content":{"sectionListRenderer":{"contents":')
 
 	f = open("result.txt", "w", encoding="utf8")
-	f.write(Data)
+	f.write(FullContent)
 	f.close()
 
 	Contents = json.loads(Data)
@@ -216,7 +216,7 @@ def c(url, request : Request):
 
 @app.get('/videos/{url}')
 def d(url, request : Request):
-	return VideoList(f"https://www.youtube.com/user/{url}/videos")
-
+	return VideoList(f"https://www.youtube.com/{url}/videos")
+# https://www.youtube.com/@waktaverse/videos
 if __name__ == "__main__":
 	uvicorn.run("app:app", host="0.0.0.0", port=7070, reload=True)
