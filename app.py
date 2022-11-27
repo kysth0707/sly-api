@@ -25,9 +25,16 @@ app.add_middleware(
 def ReturnError(Cause):
 	return {"Status" : False, "Cause" : Cause}
 
-def Slice(Content, SliceText):
-	SliceTextLoc = Content.find(SliceText)
-	Content = Content[Content.find("[", SliceTextLoc):]
+def Slice(Content : str, SliceText : str):
+	if Content.count(SliceText) == 1:
+		SliceTextLoc = Content.find(SliceText)
+		Content = Content[Content.find("[", SliceTextLoc):]
+	else:
+		for i in range(10):
+			SliceTextLoc = Content.find(SliceText)
+			if SliceTextLoc == -1:
+				break
+			Content = Content[Content.find("[", SliceTextLoc):]
 	Count = 0
 	for i in range(1000000):
 		if Content[i] == "[":
@@ -37,6 +44,10 @@ def Slice(Content, SliceText):
 			if Count == 0:
 				return Content[:i+1]
 
+def ReturnAsSuccess(Value):
+	ReturnData = {'Status' : True}
+	ReturnData['Data'] = Value
+	return ReturnData
 
 def Search(SearchText):
 	Response = requests.get(f"{urls.Search}{SearchText}")
@@ -50,7 +61,6 @@ def Search(SearchText):
 	Data = str(Slice(FullContent, '{\"itemSectionRenderer\":{\"contents\":'))
 	Contents = json.loads(Data)
 
-	ReturnData = {'Status' : True}
 	Export = []
 	for i in range(len(Contents)):
 		try:
@@ -84,8 +94,7 @@ def Search(SearchText):
 		except:
 			pass
 	
-	ReturnData['Data'] = Export
-	return ReturnData
+	return ReturnAsSuccess(Export)
 
 # def MP3Download(VideoID):
 # 	if os.path.isfile(f"./mp3/{VideoID}.mp3"):
@@ -105,7 +114,6 @@ def VideoList(url):
 
 	Contents = json.loads(Data)
 	Contents = Contents[0]['itemSectionRenderer']['contents'][0]['gridRenderer']['items']
-	ReturnData = {'Status' : True}
 	ReturnValue=[]
 	for i in range(len(Contents)):
 		try:
@@ -117,8 +125,7 @@ def VideoList(url):
 								})
 		except:
 			pass
-	ReturnData['Data'] = ReturnValue
-	return ReturnData
+	return ReturnAsSuccess(ReturnValue)
 
 def GetVideoData(ID):
 	url = f"https://www.youtube.com/watch?v={ID}"
@@ -144,13 +151,12 @@ def GetVideoData(ID):
 	
 	PublishDate = str(FullContent['dateText']['simpleText']).replace('최초 공개: ','').replace(' ','')
 
-	return {
-		'Status' : True,
+	return ReturnAsSuccess({
 		'Title' : Title,
 		'ViewCount' : ViewCount,
 		'LikeCount' : LikeCount,
 		'PublishDate' : PublishDate
-	}
+	})
 
 @app.get('/')
 def a():
